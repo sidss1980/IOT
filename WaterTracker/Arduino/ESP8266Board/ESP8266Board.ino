@@ -2,65 +2,81 @@
 #include <PubSubClient.h>
 
 
-#define SlaveDeviceId 9
-int value;
-int pinValue;
-String a;
+//#define SlaveDeviceId 9
+//int value;
+//int pinValue;
+//String a;
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
 // Update these with values suitable for your network.
-//const char* ssid = "Estuate_Accounts1";
-//const char* password = "F1r3w@ll";
-const char* ssid = "Soni";
-const char* password = "chanusingh12";
+const char* ssidO = "sid";
+const char* passwordO = "1234567890";
 
-const char* mqtt_server = "192.168.1.3";
+const char* ssid = "sid";
+const char* password = "1234567890";
 
-WiFiClient espClient;
-PubSubClient client(espClient);
+#define ORG "70dktj" // "quickstart" or use your organisation
+    
+#define DEVICE_TYPE "ESPGateway" // your device type or not used for "quickstart"
+
+#define DEVICE_ID "ESP8266"  
+#define TOKEN "0YbRq01jROlZbjM3@4" // your device token or not used for "quickstart"
+//-------- Customise the above values --------
+
+char server[] = ORG ".messaging.internetofthings.ibmcloud.com";
+
+char authMethod[] = "use-token-auth";
+
+char token[] = TOKEN;
+
+char clientId[] = "g:" ORG ":" DEVICE_TYPE ":" DEVICE_ID;
+
+WiFiClientSecure espClient;
+PubSubClient client(server, 8883, espClient);
+
 long lastMsg = 0;
 float temp = 0;
 int inPin = 5;
 
 void setup_wifi() {
   delay(10);
-  ///Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  //Serial.println(ssid);
+  WiFi.begin(ssidO, passwordO);
 
   while (WiFi.status() != WL_CONNECTED) 
   {
     delay(500);
-    ///Serial.print(".");
+    //Serial.print(".");
   }
-  ///Serial.println("WiFi connected");
+  Serial.println("WiFi connected");
 }
 
 void reconnect() {
   // Loop until we're reconnected
-  while (!client.connected()) {
-    ///Serial.print("Attempting MQTT connection...");
+  while (!!!client.connected()) {
+    //Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("arduinoClient_temperature_sensor")) {
-      ///Serial.println("connected");
+    if (client.connect(clientId, authMethod, token)) {
+      //Serial.println("connected");
     } else {
-      ///Serial.print("failed, rc=");
-      ///Serial.print(client.state());
-      ///Serial.println(" try again in 2 seconds");
+      //Serial.print("failed, rc=");
+      //Serial.print(client.state());
+      //Serial.println(" try again in 2 seconds");
       // Wait 5 seconds before retrying
-      delay(2000);
+      delay(500);
     }
   }
 }
+
  
 void setup()
 {
   Serial.begin(9600);
   setup_wifi(); 
-  client.setServer(mqtt_server, 1883);
-  //pinMode(inPin, INPUT);
-  client.setCallback(callback);
+  //client.setServer(mqtt_server, 1883);
+  //client.setCallback(callback);
   delay(10);
   inputString.reserve(200); 
 }
@@ -68,11 +84,32 @@ void setup()
 
 void loop()
 {
-  if (!client.connected()) {
+  if (!!!client.connected()) {
     reconnect();
-    client.subscribe("v1/devices/me/command");
   }
-  client.loop();
+  client.loop(); 
+  
+//       {
+//          String payload = "{\"d\":{\"myName\":\"ESP8266.U\",\"counter\":1";
+//          //payload += String(inputString).c_str();
+//          payload += "}}";
+//          client.publish("iot-2/type/MQTTDevices/id/IRSensor-1/evt/status/fmt/json", (char*) payload.c_str());
+//       }    
+//
+//       {
+//          String payload = "{\"d\":{\"myName\":\"ESP8266.IR\",\"counter\":2";
+//          //payload += String(inputString).c_str();
+//          payload += "}}";
+//          client.publish("iot-2/type/MQTTDevices/id/UltraSonic-1/evt/status/fmt/json", (char*) payload.c_str());
+//       }
+//
+//       {
+//          String payload = "{\"d\":{\"myName\":\"ESP8266.IR\",\"counter\":3";
+//          //payload += String(inputString).c_str();
+//          payload += "}}";
+//          client.publish("iot-2/type/MQTTDevices/id/AddDynamic/evt/status/fmt/json", (char*) payload.c_str());
+//       }
+
 
   while (Serial.available()) {
     // get the new byte:
@@ -81,18 +118,27 @@ void loop()
     inputString += inChar;
     // if the incoming character is a newline, set a flag so the main loop can
     // do something about it:
+    
     if (inChar == '\n') {
+        
        if(inputString.charAt(0) == '1')//first char of string is 1... then publish to topic-A... the meesage content are next set of strings)
        {
-          client.publish("v1/devices/flow/1", String(inputString).c_str());
+          String payload = "{\"d\":{\"myName\":\"ESP8266.IR\",\"counter\":";
+          payload += String(inputString).substring(2).c_str();
+          payload += "}}";
+          client.publish("iot-2/type/MQTTDevices/id/IRSensor-1/evt/status/fmt/json", (char*) payload.c_str());
        }
        else if(inputString.charAt(0) == '2')//first char of string is 1... then publish to topic-A... the meesage content are next set of strings)
        {
-          client.publish("v1/devices/flow/2", String(inputString).c_str());
+          String payload = "{\"d\":{\"myName\":\"ESP8266.U\",\"counter\":";
+          payload += String(inputString).substring(2).c_str();
+          payload += "}}";
+          client.publish("iot-2/type/MQTTDevices/id/UltraSonic-1/evt/status/fmt/json", (char*) payload.c_str());
        }
        inputString = "";
     }
   }
+//delay(5000);
 }
 
 

@@ -1,8 +1,8 @@
 /*-----( Import needed libraries )-----*/
 #include <SoftwareSerial.h>
 /*-----( Declare Constants and Pin Numbers )-----*/
-#define SSerialRX 6
-#define SSerialTX 7
+#define SSerialRX 8
+#define SSerialTX 9
 #define Pin13LED  13
 
 /*-----( Declare objects )-----*/
@@ -269,6 +269,8 @@ void loop()   /****** LOOP: RUNS CONSTANTLY ******/
     // Enable the interrupt again now that we've finished sending output
     attachInterrupt(digitalPinToInterrupt(sensorFlowPin2), pulseCounter2, FALLING);
   }
+
+  delay(2000);
 }//--(end main loop )---
 
 /*-----( Declare User-written Functions )-----*/
